@@ -2,6 +2,10 @@
 
 namespace Visualbuilder\EmailTemplates\Models;
 
+use App\Models\Company;
+use App\Models\User;
+use Exception;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,11 +13,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Visualbuilder\EmailTemplates\Database\Factories\EmailTemplateFactory;
 use Visualbuilder\EmailTemplates\Facades\TokenHelper;
-
+use Visualbuilder\EmailTemplates\Helpers\CreateMailableHelper;
+use Visualbuilder\EmailTemplates\Helpers\TenancyHelpers;
+use Visualbuilder\EmailTemplates\Models\Scopes\EmailTemplateScope;
+use Visualbuilder\EmailTemplates\Models\Scopes\EmailTemplateThemeScope;
 
 /**
  * @property int $id
@@ -32,6 +40,8 @@ use Visualbuilder\EmailTemplates\Facades\TokenHelper;
  * @property string $updated_at
  * @property string $deleted_at
  */
+
+#[ScopedBy([EmailTemplateScope::class])]
 class EmailTemplate extends Model
 {
     use HasFactory;
@@ -51,6 +61,11 @@ class EmailTemplate extends Model
         'content',
         'language',
         'logo',
+        'logo_width',
+        'logo_height',
+        'content_width',
+        'links',
+        'customer_services',
 
     ];
 
@@ -62,6 +77,8 @@ class EmailTemplate extends Model
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
         'from' => 'array',
+        'links' => 'array',
+        'customer_services' => 'array',
     ];
     /**
      * @var string[]
@@ -103,15 +120,21 @@ class EmailTemplate extends Model
 
     public static function findEmailByKey($key, $language = null)
     {
-        $cacheKey = "email_by_key_{$key}_{$language}";
+        // dd(config('filament-email-templates.default_locale'));
+        try {
+            // adding the tenant slug to unique the key
+            $tenant  = TenancyHelpers::getTenantModelOutSideFilament();
+            $cacheKey = "email_by_key_{$key}_{$language}_{$tenant->slug}";
 
-        //For multi site domains this key will need to include the site_id
-        return Cache::remember($cacheKey, now()->addMinutes(60), function () use ($key, $language) {
+            //For multi site domains this key will need to include the site_id
             return self::query()
                 ->language($language ?? config('filament-email-templates.default_locale'))
                 ->where("key", $key)
                 ->firstOrFail();
-        });
+        } catch (\Exception $e) {
+            Log::error($e->getMessage() . $e->getFile());
+            throw new Exception($e->getMessage() . $e->getFile());
+        }
     }
 
     public static function clearEmailTemplateCache($key, $language)
@@ -145,16 +168,19 @@ class EmailTemplate extends Model
     }
 
     /**
-     * Get the assigned theme or the default
+     * Get the assigned theme or the default theme related to the current tenant.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function theme()
     {
-        return $this->belongsTo(EmailTemplateTheme::class, config('filament-email-templates.theme_table_name') . '_id')->withDefault(function ($model) {
-            return EmailTemplateTheme::where('is_default', true)->first();
-        });
+        return $this->belongsTo(EmailTemplateTheme::class, config('filament-email-templates.theme_table_name') . '_id')
+            ->withDefault(function ($model) {
+                return EmailTemplateTheme::where('is_default', true)
+                    ->first();
+            });
     }
+
 
     /**
      * Gets base64 encoded content - to add to an iframe
@@ -223,7 +249,6 @@ class EmailTemplate extends Model
     public function scopeLanguage(Builder $query, $language)
     {
         $languages = [$language, config('filament-email-templates.default_locale')];
-
         return $query->whereIn('language', $languages)
             ->orderByRaw(
                 "(CASE WHEN language = ? THEN 1 ELSE 2 END)",
@@ -273,10 +298,29 @@ class EmailTemplate extends Model
     public function getLogoAttribute(): string
     {
         //Get Database logo or config logo
-        $logo = $this->attributes['logo'] ?? config('filament-email-templates.logo');
+        $logo = $this->attributes['logo'] ?? $this->emailable->avatar_url;
 
         // Return the logo if it's a full URL, otherwise, return the asset URL.
-        return Str::isUrl($logo) ? $logo : asset($logo);
+        return Str::isUrl($logo) ? $logo : asset(config('app.avatar_asset_url') . $logo);
     }
 
+    // new
+    protected static function booted(): void
+    {
+        static::creating(function (EmailTemplate $model) {
+
+            $currentTenant = filament()->getTenant();
+            if (empty($model->emailable_type)) {
+                $model->emailable_type = is_null($currentTenant) ? 'App\Models\User' : 'App\Models\Company';
+            }
+            if (empty($model->emailable_id)) {
+                $model->emailable_id = is_null($currentTenant) ? auth()->id() : $currentTenant->id;
+            }
+        });
+    }
+
+    public function emailable()
+    {
+        return $this->morphTo();
+    }
 }

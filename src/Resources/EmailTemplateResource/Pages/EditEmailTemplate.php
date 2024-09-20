@@ -41,6 +41,8 @@ class EditEmailTemplate extends EditRecord
         if(!is_null($data['logo']) && Str::isUrl($data['logo'])) {
             $data['logo_type'] = 'paste_url';
             $data['logo_url'] = $data['logo'];
+        } else {
+            $data['logo'] = null;
         }
 
         return $data;
@@ -54,7 +56,10 @@ class EditEmailTemplate extends EditRecord
         // deleting previous logo
         if ($record->logo != $sortedData['logo']) {
             $emailTemplateResource->handleLogoDelete($record->logo);
+        }  else {
+            $data['logo'] = null;
         }
+
 
         $record->update($sortedData);
 

@@ -2,11 +2,11 @@
 <tr>
     <td bgcolor="{{$data['theme']["footer_bg_color"]}}" align="center" style="padding: 30px 10px 0px 10px; background-color: {{$data['theme']["footer_bg_color"]}}">
         <!--[if (gte mso 9)|(IE)]>
-        <table align="center" border="0" cellspacing="0" cellpadding="0" width="{{config('filament-email-templates.content_width')}}">
+        <table align="center" border="0" cellspacing="0" cellpadding="0" width="{{$data['configs']['content_width']}}">
             <tr>
-                <td align="center" valign="top" width="{{config('filament-email-templates.content_width')}}">
+                <td align="center" valign="top" width="{{$data['configs']['content_width']}}">
         <![endif]-->
-        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: {{config('filament-email-templates.content_width')}}px; margin-bottom: 30px">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: {{$data['configs']['content_width']}}px; margin-bottom: 30px">
             <!-- HEADLINE -->
             <tr>
                 <td bgcolor="{{$data['theme']["callout_bg_color"]}}" align="center"

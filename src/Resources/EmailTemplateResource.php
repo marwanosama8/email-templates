@@ -27,14 +27,18 @@ use Visualbuilder\EmailTemplates\Models\EmailTemplate;
 use Visualbuilder\EmailTemplates\Resources\EmailTemplateResource\Pages;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Get;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\HtmlString;
 
 class EmailTemplateResource extends Resource
 {
     protected static ?string $model = EmailTemplate::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
+
+    protected static bool $isScopedToTenant = false;
 
     public static function getNavigationGroup(): ?string
     {
@@ -91,37 +95,22 @@ class EmailTemplateResource extends Resource
                             Grid::make(['default' => 1, 'sm' => 1, 'md' => 2])
                                 ->schema(
                                     [
-                                        TextInput::make('key')
-                                            ->afterStateUpdated(
-                                                fn (Set $set, ?string $state) => $set('key', Str::slug($state))
-                                            )
-                                            ->label(__('vb-email-templates::email-templates.form-fields-labels.key'))
-                                            ->hint(__('vb-email-templates::email-templates.form-fields-labels.key-hint'))
-                                            ->required()
-                                            ->unique(ignorable: fn ($record) => $record),
                                         Select::make('language')
                                             ->options($formHelper->getLanguageOptions())
                                             ->default(config('filament-email-templates.default_locale'))
                                             ->searchable()
                                             ->allowHtml(),
-                                        TextInput::make('from.email')->default(config('mail.from.address'))
-                                                ->label(__('vb-email-templates::email-templates.form-fields-labels.email-from'))
-                                                ->email(),
-                                        TextInput::make('from.name')->default(config('mail.from.name'))
-                                                ->label(__('vb-email-templates::email-templates.form-fields-labels.email-from-name'))
-                                                ->string(),
-
-                                        Select::make('view')
-                                            ->label(__('vb-email-templates::email-templates.form-fields-labels.template-view'))
-                                            ->options($templates)
-                                            ->default(current($templates))
-                                            ->searchable()
-                                            ->required(),
-
-                                        Select::make(config('filament-email-templates.theme_table_name') . '_id')
+                                            Select::make(config('filament-email-templates.theme_table_name') . '_id')
                                             ->label(__('vb-email-templates::email-templates.form-fields-labels.theme'))
                                             ->relationship(name: 'theme', titleAttribute: 'name')
-                                            ->native(false)
+                                            ->native(false),
+                                        TextInput::make('from.email')->default(config('mail.from.address'))
+                                            ->label(__('vb-email-templates::email-templates.form-fields-labels.email-from'))
+                                            ->email(),
+                                        TextInput::make('from.name')->default(config('mail.from.name'))
+                                            ->label(__('vb-email-templates::email-templates.form-fields-labels.email-from-name'))
+                                            ->string(),
+
                                     ]
                                 ),
 
@@ -130,7 +119,6 @@ class EmailTemplateResource extends Resource
                                     [
                                         TextInput::make('subject')
                                             ->label(__('vb-email-templates::email-templates.form-fields-labels.subject')),
-
                                         TextInput::make('preheader')
                                             ->label(__('vb-email-templates::email-templates.form-fields-labels.header'))
                                             ->hint(__('vb-email-templates::email-templates.form-fields-labels.header-hint')),
@@ -138,30 +126,35 @@ class EmailTemplateResource extends Resource
                                         TextInput::make('title')
                                             ->label(__('vb-email-templates::email-templates.form-fields-labels.title'))
                                             ->hint(__('vb-email-templates::email-templates.form-fields-labels.title-hint')),
-
+                                        TextInput::make('content_width')
+                                            ->default(600)
+                                            ->numeric()
+                                            ->required()
+                                            ->maxValue(1200)
+                                            ->minValue(480)
+                                            ->label(__('vb-email-templates::email-templates.form-fields-labels.content_width'))
+                                            ->hint(__('vb-email-templates::email-templates.form-fields-labels.content-width')),
                                         TiptapEditor::make('content')
                                             ->tools([])
+                                            ->hint( fn() => new HtmlString('<p>
+                                            - <code>##invoice.customer_name##</code> => The Invoice Customer Name <br>
+                                            - <code>##invoice.number##</code> => The Invoice Number <br>
+                                         </p>'))
+
+
                                             ->label(__('vb-email-templates::email-templates.form-fields-labels.content'))
                                             ->profile('default')
                                             ->default("<p>Dear ##user.firstname##, </p>"),
-
                                         Radio::make('logo_type')
                                             ->label(__('vb-email-templates::email-templates.form-fields-labels.logo-type'))
                                             ->options([
-                                                'browse_another' => __('vb-email-templates::email-templates.form-fields-labels.browse-another'),
+                                                'my_logo' => __('vb-email-templates::email-templates.form-fields-labels.my_logo'),
                                                 'paste_url' => __('vb-email-templates::email-templates.form-fields-labels.paste-url'),
                                             ])
-                                            ->default('browse_another')
+                                            ->default('my_logo')
                                             ->inline()
                                             ->live(),
-
-                                        FileUpload::make('logo')
-                                            ->label(__('vb-email-templates::email-templates.form-fields-labels.logo'))
-                                            ->hint(__('vb-email-templates::email-templates.form-fields-labels.logo-hint'))
-                                            ->hidden(fn(Get $get) => $get('logo_type') !== 'browse_another')
-                                            ->directory(config('filament-email-templates.browsed_logo'))
-                                            ->image(),
-
+                                    
                                         TextInput::make('logo_url')
                                             ->label(__('vb-email-templates::email-templates.form-fields-labels.logo-url'))
                                             ->hint(__('vb-email-templates::email-templates.form-fields-labels.logo-url-hint'))
@@ -169,6 +162,55 @@ class EmailTemplateResource extends Resource
                                             ->hidden(fn(Get $get) => $get('logo_type') !== 'paste_url')
                                             ->activeUrl()
                                             ->maxLength(191),
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('logo_width')
+                                                    ->label(__('vb-email-templates::email-templates.form-fields-labels.logo-width'))
+                                                    ->default('500')
+                                                    ->numeric()
+                                                    ->required()
+                                                    ->minValue(250)
+                                                    ->maxValue(500),
+                                                TextInput::make('logo_height')
+                                                    ->label(__('vb-email-templates::email-templates.form-fields-labels.logo-height'))
+                                                    ->default('126')
+                                                    ->required()
+                                                    ->numeric()
+                                                    ->minValue(126)
+                                                    ->maxValue(200),
+                                            ]),
+                                        Repeater::make('customer_services')
+                                        ->minItems(1)
+                                        ->label(__('vb-email-templates::email-templates.form-fields-customer_services'))
+                                        ->hint('asdasdasd asidjaslid')
+                                        ->schema([
+                                                TextInput::make('key')
+                                                ->label(__('vb-email-templates::email-templates.form-fields-customer_services.email'))
+                                                ->default('support@yourcompany.com')
+                                                ->required(),
+                                                TextInput::make('value')
+                                                ->label(__('vb-email-templates::email-templates.form-fields-customer_services.phone'))
+                                                ->default('+441273 455702')
+                                                ->required(),
+                                        ]),
+                                        Repeater::make('links')
+                                        ->label(__('vb-email-templates::email-templates.form-fields-links'))
+                                        ->minItems(1)
+                                        ->schema([
+                                                TextInput::make('name')
+                                                ->label(__('vb-email-templates::email-templates.form-fields-links.name'))
+                                                ->default('website')
+                                                ->required(),
+                                                TextInput::make('url')
+                                                ->default('https://yourwebsite.com')
+                                                ->label(__('vb-email-templates::email-templates.form-fields-links.url'))
+                                                ->required(),
+                                                TextInput::make('title')
+                                                ->default('Go To Website')
+                                                ->label(__('vb-email-templates::email-templates.form-fields-links.title'))
+                                                ->required(),
+                                        ]),
+
                                     ]
                                 ),
 
@@ -177,28 +219,27 @@ class EmailTemplateResource extends Resource
             ]
         );
     }
-
     public static function table(Table $table): Table
     {
 
         return $table
             ->query(EmailTemplate::query())
             ->columns(
-            [
-                TextColumn::make('id')
+                [
+                    TextColumn::make('id')
                         ->sortable()
                         ->searchable(),
-                TextColumn::make('name')
+                    TextColumn::make('name')
                         ->limit(50)
                         ->sortable()
                         ->searchable(),
-                TextColumn::make('language')
+                    TextColumn::make('language')
                         ->limit(50),
-                TextColumn::make('subject')
+                    TextColumn::make('subject')
                         ->searchable()
                         ->limit(50),
-            ]
-        )
+                ]
+            )
             ->filters(
                 [
                     Tables\Filters\TrashedFilter::make(),
@@ -235,7 +276,6 @@ class EmailTemplateResource extends Resource
                         ->modalSubmitAction(false)
                         ->modalCancelAction(false)
                         ->slideOver(),
-
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\ForceDeleteAction::make()
@@ -277,6 +317,8 @@ class EmailTemplateResource extends Resource
     {
         if ($data['logo_type'] == "paste_url" && $data['logo_url']) {
             $data['logo'] = $data['logo_url'];
+        } else {
+            $data['logo'] = null;
         }
         unset($data['logo_type']);
         return $data;

@@ -2,11 +2,15 @@
 
 namespace Visualbuilder\EmailTemplates\Models;
 
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Visualbuilder\EmailTemplates\Database\Factories\EmailTemplateThemeFactory;
+use Visualbuilder\EmailTemplates\Helpers\CreateMailableHelper;
+use Visualbuilder\EmailTemplates\Models\Scopes\EmailTemplateThemeScope;
 
+#[ScopedBy([EmailTemplateThemeScope::class])]
 class EmailTemplateTheme extends Model
 {
     use HasFactory;
@@ -50,5 +54,25 @@ class EmailTemplateTheme extends Model
     protected static function newFactory()
     {
         return EmailTemplateThemeFactory::new();
+    }
+
+    //new 
+    protected static function booted(): void
+    {
+        static::creating(function (EmailTemplateTheme $model) {
+
+            $currentTenant = filament()->getTenant();       
+            if (empty($model->emailable_type)) {
+                $model->emailable_type = is_null($currentTenant) ? 'App\Models\User' : 'App\Models\Company';
+            }
+            if (empty($model->emailable_id)) {
+                $model->emailable_id = is_null($currentTenant) ? auth()->id() : $currentTenant->id;
+            }
+        });
+    }
+
+    public function emailable()
+    {
+        return $this->morphTo();
     }
 }

@@ -21,6 +21,8 @@ class EmailTemplateThemeResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-paint-brush';
 
+    protected static bool $isScopedToTenant = false;
+
     public static function getNavigationGroup(): ?string
     {
         return EmailTemplatesPlugin::get()->getNavigationGroup();

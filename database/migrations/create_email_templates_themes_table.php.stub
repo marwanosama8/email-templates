@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create(config('filament-email-templates.theme_table_name'), function (Blueprint $table) {
             $table->increments('id');
+            $table->morphs('emailable');
             $table->string('name', 191)->nullable()->comment('Name');
             $table->json('colours')->nullable();
             $table->boolean('is_default')->default(0)->comment('1: Active | 0: Not Active');
