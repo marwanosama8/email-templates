@@ -23,15 +23,14 @@ trait BuildGenericEmail
         {
                 $this->emailTemplate = EmailTemplate::findEmailByKey($this->template, App::currentLocale());
                 if ($this->attachment ?? false) {
-                        $this->attach(
-                                $this->attachment->getPath(),
+                        $this->attachData(
+                                $this->attachment['file'],
+                                $this->attachment['filename'],
                                 [
-                                        'as'   => $this->attachment->filename,
-                                        'mime' => $this->attachment->mime_type,
+                                        'mime' => 'application/pdf'
                                 ]
                         );
                 }
-                // $tenantData = 
                 $data = [
                         'content'       => TokenHelper::replace($this->emailTemplate->content, $this),
                         'preHeaderText' => TokenHelper::replace($this->emailTemplate->preheader, $this),

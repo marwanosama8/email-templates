@@ -140,7 +140,7 @@ class EmailTemplateThemeResource extends Resource
     {
         return $table
                 ->columns([
-                        Tables\Columns\TextColumn::make('id')->sortable()->searchable(),
+                        // Tables\Columns\TextColumn::make('id')->sortable()->searchable(),
                         Tables\Columns\TextColumn::make('name')->sortable()->searchable(),
                         Tables\Columns\IconColumn::make('is_default')->boolean(),
                 ])

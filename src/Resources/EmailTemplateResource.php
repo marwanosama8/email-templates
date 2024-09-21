@@ -29,6 +29,7 @@ use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Get;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\HtmlString;
 
@@ -100,7 +101,7 @@ class EmailTemplateResource extends Resource
                                             ->default(config('filament-email-templates.default_locale'))
                                             ->searchable()
                                             ->allowHtml(),
-                                            Select::make(config('filament-email-templates.theme_table_name') . '_id')
+                                        Select::make(config('filament-email-templates.theme_table_name') . '_id')
                                             ->label(__('vb-email-templates::email-templates.form-fields-labels.theme'))
                                             ->relationship(name: 'theme', titleAttribute: 'name')
                                             ->native(false),
@@ -136,7 +137,7 @@ class EmailTemplateResource extends Resource
                                             ->hint(__('vb-email-templates::email-templates.form-fields-labels.content-width')),
                                         TiptapEditor::make('content')
                                             ->tools([])
-                                            ->hint( fn() => new HtmlString('<p>
+                                            ->hint(fn() => new HtmlString('<p>
                                             - <code>##invoice.customer_name##</code> => The Invoice Customer Name <br>
                                             - <code>##invoice.number##</code> => The Invoice Number <br>
                                          </p>'))
@@ -154,7 +155,7 @@ class EmailTemplateResource extends Resource
                                             ->default('my_logo')
                                             ->inline()
                                             ->live(),
-                                    
+
                                         TextInput::make('logo_url')
                                             ->label(__('vb-email-templates::email-templates.form-fields-labels.logo-url'))
                                             ->hint(__('vb-email-templates::email-templates.form-fields-labels.logo-url-hint'))
@@ -180,36 +181,36 @@ class EmailTemplateResource extends Resource
                                                     ->maxValue(200),
                                             ]),
                                         Repeater::make('customer_services')
-                                        ->minItems(1)
-                                        ->label(__('vb-email-templates::email-templates.form-fields-customer_services'))
-                                        ->hint('asdasdasd asidjaslid')
-                                        ->schema([
+                                            ->minItems(1)
+                                            ->label(__('vb-email-templates::email-templates.form-fields-customer_services'))
+                                            ->hint('asdasdasd asidjaslid')
+                                            ->schema([
                                                 TextInput::make('key')
-                                                ->label(__('vb-email-templates::email-templates.form-fields-customer_services.email'))
-                                                ->default('support@yourcompany.com')
-                                                ->required(),
+                                                    ->label(__('vb-email-templates::email-templates.form-fields-customer_services.email'))
+                                                    ->default('support@yourcompany.com')
+                                                    ->required(),
                                                 TextInput::make('value')
-                                                ->label(__('vb-email-templates::email-templates.form-fields-customer_services.phone'))
-                                                ->default('+441273 455702')
-                                                ->required(),
-                                        ]),
+                                                    ->label(__('vb-email-templates::email-templates.form-fields-customer_services.phone'))
+                                                    ->default('+441273 455702')
+                                                    ->required(),
+                                            ]),
                                         Repeater::make('links')
-                                        ->label(__('vb-email-templates::email-templates.form-fields-links'))
-                                        ->minItems(1)
-                                        ->schema([
+                                            ->label(__('vb-email-templates::email-templates.form-fields-links'))
+                                            ->minItems(1)
+                                            ->schema([
                                                 TextInput::make('name')
-                                                ->label(__('vb-email-templates::email-templates.form-fields-links.name'))
-                                                ->default('website')
-                                                ->required(),
+                                                    ->label(__('vb-email-templates::email-templates.form-fields-links.name'))
+                                                    ->default('website')
+                                                    ->required(),
                                                 TextInput::make('url')
-                                                ->default('https://yourwebsite.com')
-                                                ->label(__('vb-email-templates::email-templates.form-fields-links.url'))
-                                                ->required(),
+                                                    ->default('https://yourwebsite.com')
+                                                    ->label(__('vb-email-templates::email-templates.form-fields-links.url'))
+                                                    ->required(),
                                                 TextInput::make('title')
-                                                ->default('Go To Website')
-                                                ->label(__('vb-email-templates::email-templates.form-fields-links.title'))
-                                                ->required(),
-                                        ]),
+                                                    ->default('Go To Website')
+                                                    ->label(__('vb-email-templates::email-templates.form-fields-links.title'))
+                                                    ->required(),
+                                            ]),
 
                                     ]
                                 ),
@@ -226,9 +227,9 @@ class EmailTemplateResource extends Resource
             ->query(EmailTemplate::query())
             ->columns(
                 [
-                    TextColumn::make('id')
-                        ->sortable()
-                        ->searchable(),
+                    // TextColumn::make('id')
+                    //     ->sortable()
+                    //     ->searchable(),
                     TextColumn::make('name')
                         ->limit(50)
                         ->sortable()
@@ -242,30 +243,29 @@ class EmailTemplateResource extends Resource
             )
             ->filters(
                 [
-                    Tables\Filters\TrashedFilter::make(),
                 ]
             )
             ->actions(
                 [
-                    Action::make('create-mail-class')
-                        ->label("Build Class")
-                        //Only show the button if the file does not exist
-                        ->visible(function (EmailTemplate $record) {
-                            return !$record->mailable_exists;
-                        })
-                        ->icon('heroicon-o-document-text')
-                        // ->action('createMailClass'),
-                        ->action(function (EmailTemplate $record) {
-                            $notify = app(CreateMailableInterface::class)->createMailable($record);
-                            Notification::make()
-                                ->title($notify->title)
-                                ->icon($notify->icon)
-                                ->iconColor($notify->icon_color)
-                                ->duration(10000)
-                                //Fix for bug where body hides the icon
-                                ->body("<span style='overflow-wrap: anywhere;'>" . $notify->body . "</span>")
-                                ->send();
-                        }),
+                    // Action::make('create-mail-class')
+                    //     ->label("Build Class")
+                    //     //Only show the button if the file does not exist
+                    //     ->visible(function (EmailTemplate $record) {
+                    //         return !$record->mailable_exists;
+                    //     })
+                    //     ->icon('heroicon-o-document-text')
+                    //     // ->action('createMailClass'),
+                    //     ->action(function (EmailTemplate $record) {
+                    //         $notify = app(CreateMailableInterface::class)->createMailable($record);
+                    //         Notification::make()
+                    //             ->title($notify->title)
+                    //             ->icon($notify->icon)
+                    //             ->iconColor($notify->icon_color)
+                    //             ->duration(10000)
+                    //             //Fix for bug where body hides the icon
+                    //             ->body("<span style='overflow-wrap: anywhere;'>" . $notify->body . "</span>")
+                    //             ->send();
+                    //     }),
                     Tables\Actions\ViewAction::make('Preview')
                         ->icon('heroicon-o-magnifying-glass')
                         ->modalContent(fn(EmailTemplate $record): View => view(
@@ -277,19 +277,16 @@ class EmailTemplateResource extends Resource
                         ->modalCancelAction(false)
                         ->slideOver(),
                     Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make(),
-                    Tables\Actions\ForceDeleteAction::make()
-                        ->before(function (EmailTemplate $record, EmailTemplateResource $emailTemplateResource) {
-                            $emailTemplateResource->handleLogoDelete($record->logo);
-                        }),
-                    Tables\Actions\RestoreAction::make(),
+                    // Tables\Actions\DeleteAction::make(),
+                    // Tables\Actions\ForceDeleteAction::make()
+                    //     ->before(function (EmailTemplate $record, EmailTemplateResource $emailTemplateResource) {
+                    //         $emailTemplateResource->handleLogoDelete($record->logo);
+                    //     }),
+                    // Tables\Actions\RestoreAction::make(),
                 ]
             )
             ->bulkActions(
                 [
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
                 ]
             );
     }
@@ -298,11 +295,34 @@ class EmailTemplateResource extends Resource
     {
         return [
             'index' => Pages\ListEmailTemplates::route('/'),
-            'create' => Pages\CreateEmailTemplate::route('/create'),
+            // 'create' => Pages\CreateEmailTemplate::route('/create'),
             'edit' => Pages\EditEmailTemplate::route('/{record}/edit'),
         ];
     }
 
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+    public static function canDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return false;
+    }
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
@@ -323,6 +343,8 @@ class EmailTemplateResource extends Resource
         unset($data['logo_type']);
         return $data;
     }
+
+
 
     public function handleLogoDelete($logo)
     {

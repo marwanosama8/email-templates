@@ -216,6 +216,14 @@ class EmailTemplate extends Model
             'title' => TokenHelper::replace($this->title ?? '', $models),
             'theme' => $this->theme->colours,
             'logo' => $this->logo,
+            'configs'       => [
+                'logo_width' =>  $this->logo_width,
+                'logo_height' =>  $this->logo_height,
+                'content_width' =>  $this->content_width,
+                'links' =>  $this->links,
+                'customer_services' =>  $this->customer_services,
+                'company_name' =>  $this->emailable->legal_name,
+            ]
         ];
     }
 
@@ -301,7 +309,7 @@ class EmailTemplate extends Model
         $logo = $this->attributes['logo'] ?? $this->emailable->avatar_url;
 
         // Return the logo if it's a full URL, otherwise, return the asset URL.
-        return Str::isUrl($logo) ? $logo : asset(config('app.avatar_asset_url') . $logo);
+        return Str::isUrl($logo) ? $logo : asset($logo);
     }
 
     // new
