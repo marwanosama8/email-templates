@@ -5,11 +5,14 @@ namespace Database\Seeders;
 use App\Models\User;
 use Visualbuilder\EmailTemplates\Models\EmailTemplateTheme;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class EmailTemplateThemeSeeder extends Seeder
 {
     public function run()
     {
+        DB::table(config('filament-email-templates.theme_table_name'))->delete();
+
         $themes = $this->getThemes();
         $roles = ['user', 'super_company', 'company'];
     
