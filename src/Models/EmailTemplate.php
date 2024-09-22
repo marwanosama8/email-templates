@@ -125,11 +125,16 @@ class EmailTemplate extends Model
             // adding the tenant slug to unique the key
             $tenant  = TenancyHelpers::getTenantModelOutSideFilament();
 
+            if (!is_null($tenant)) {
+                return self::query()
+                    ->language($language ?? config('filament-email-templates.default_locale'))
+                    ->where("key", $key)
+                    ->firstOrFail();
+                } else {
+                return self::withoutGlobalScopes()->first();
+            }
+            
             //For multi site domains this key will need to include the site_id
-            return self::query()
-                ->language($language ?? config('filament-email-templates.default_locale'))
-                ->where("key", $key)
-                ->firstOrFail();
         } catch (\Exception $e) {
             Log::error($e->getMessage() . $e->getFile());
             throw new Exception($e->getMessage() . $e->getFile());

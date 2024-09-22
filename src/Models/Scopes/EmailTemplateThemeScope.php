@@ -16,6 +16,12 @@ class EmailTemplateThemeScope implements Scope
     public function apply(Builder $builder, Model $model): void
     {
         $currentTenant = TenancyHelpers::getTenantModelOutSideFilament();
-        $builder->where('emailable_type', get_class($currentTenant))->where('emailable_id', $currentTenant->id);
+
+        if (!is_null($currentTenant)) {
+            $builder->where('emailable_type', get_class($currentTenant))
+                ->where('emailable_id', $currentTenant->id);
+        } else {
+            $builder->where('created_at', '>', now()->subYears(5));
+        }
     }
 }
