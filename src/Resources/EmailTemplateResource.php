@@ -137,10 +137,19 @@ class EmailTemplateResource extends Resource
                                             ->hint(__('vb-email-templates::email-templates.form-fields-labels.content-width')),
                                         TiptapEditor::make('content')
                                             ->tools([])
-                                            ->hint(fn() => new HtmlString('<p>
-                                            - <code>##invoice.customer_name##</code> => The Invoice Customer Name <br>
-                                            - <code>##invoice.number##</code> => The Invoice Number <br>
-                                         </p>'))
+                                            ->hint(function() {
+                                                $allowedKeys = config('filament-email-templates.allowed_template_keys', []);
+                                                
+                                                // Build the hint content based on allowed keys
+                                                $hintContent = '<p>';
+                                                foreach ($allowedKeys as $key) {
+                                                    $hintContent .= '- <code>##invoice.' . htmlspecialchars($key) . '##</code> => The ' . ucfirst(str_replace('_', ' ', $key)) . ' <br>';
+                                                }
+                                                $hintContent .= '</p>';
+                                            
+                                                return new HtmlString($hintContent);
+                                            })
+                                            
 
 
                                             ->label(__('vb-email-templates::email-templates.form-fields-labels.content'))
@@ -183,7 +192,6 @@ class EmailTemplateResource extends Resource
                                         Repeater::make('customer_services')
                                             ->minItems(1)
                                             ->label(__('vb-email-templates::email-templates.form-fields-customer_services'))
-                                            ->hint('asdasdasd asidjaslid')
                                             ->schema([
                                                 TextInput::make('key')
                                                     ->label(__('vb-email-templates::email-templates.form-fields-customer_services.email'))

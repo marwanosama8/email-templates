@@ -36,18 +36,28 @@ class DefaultTokenHelper implements TokenReplacementInterface
          * Will look for pattern ##model.attribute## and replace the value if found.
          * Eg ##user.name## or create your own accessors in a model
          */
+        $allowedKeys = config('filament-email-templates.allowed_template_keys');
+        // Replace tokens for model-attribute pairs like ##invoice.number##
         preg_match_all('/##(.*?)\.(.*?)##/', $content, $matches);
-
+    
         if (count($matches) > 0 && count($matches[0]) > 0) {
             for ($i = 0; $i < count($matches[0]); $i++) {
-                $modelKey = $matches[1][$i];
-                $attributeKey = $matches[2][$i];
-                $replacement = (isset($models->$modelKey) && isset($models->$modelKey->$attributeKey))?$models->$modelKey->$attributeKey:"";
-                $content = str_replace($matches[0][$i], $replacement, $content);
-
+                $modelKey = $matches[1][$i]; // e.g. 'invoice'
+                $attributeKey = $matches[2][$i]; // e.g. 'number', 'customer.name'
+    
+                // Check if the attribute is allowed
+                if (in_array($attributeKey, $allowedKeys)) {
+                    // Replace with the actual value if it exists
+                    $replacement = (isset($models->$modelKey) && isset($models->$modelKey->$attributeKey))
+                        ? $models->$modelKey->$attributeKey
+                        : "";
+                    $content = str_replace($matches[0][$i], $replacement, $content);
+                } else {
+                    // Replace disallowed tokens with "##NOT AVAILABLE KEY##"
+                    $content = str_replace($matches[0][$i], "##NOT AVAILABLE KEY##", $content);
+                }
             }
         }
-
         /**
          * Replace config tokens.
          * Define which tokens are allowed in this config setting

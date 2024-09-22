@@ -43,6 +43,22 @@ return [
         'message'
     ],
 
+
+
+    /**
+     * Allowed tokens
+     */
+    'allowed_template_keys' => [
+        'number',
+        'date_origin',
+        'date_pay',
+        'date_start',
+        'date_end',
+        'total',
+        'customer.name',
+        'customer.contact_email',
+    ],
+
     /**
      * Admin panel navigation options
      */
@@ -71,38 +87,7 @@ return [
 
     'template_view_path' => 'vb-email-templates::email',
 
-    'template_keys' => [
-            'user-welcome'=>'User Welcome Email',
-            'user-request-reset'=>'User Request Password Reset',
-            'user-password-reset-success'=>'User Password Reset',
-            'user-locked-out'=>'User Account Locked Out',
-            'user-verify-email'=>'User Verify Email',
-            'user-verified'=>'User Verified',
-            'user-login'=>'User Logged In',
-    ],
 
-    //Default Logo
-    'logo' => 'media/email-templates/logo.png',
-
-    //Browsed Logo
-    'browsed_logo' => 'media/email-templates/logos',
-
-    //Logo size in pixels -> 200 pixels high is plenty big enough.
-    'logo_width' => '500',
-    'logo_height' => '126',
-
-    //Content Width in Pixels
-    'content_width' => '600',
-
-    //Contact details included in default email templates
-    'customer-services' => ['email' => 'support@yourcompany.com',
-        'phone' => '+441273 455702'],
-
-    //Footer Links
-    'links' => [
-        ['name' => 'Website', 'url' => 'https://yourwebsite.com', 'title' => 'Goto website'],
-        ['name' => 'Privacy Policy', 'url' => 'https://yourwebsite.com/privacy-policy', 'title' => 'View Privacy Policy'],
-    ],
 
     //Options for alternative languages
     //Note that Laravel default locale is just 'en' you can use this but
