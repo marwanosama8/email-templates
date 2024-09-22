@@ -124,7 +124,6 @@ class EmailTemplate extends Model
         try {
             // adding the tenant slug to unique the key
             $tenant  = TenancyHelpers::getTenantModelOutSideFilament();
-            $cacheKey = "email_by_key_{$key}_{$language}_{$tenant->slug}";
 
             //For multi site domains this key will need to include the site_id
             return self::query()
