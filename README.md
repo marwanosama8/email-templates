@@ -1,4 +1,4 @@
-## Email template editor for Filament 3.0 Supporting Multi Tenant  
+## Email template editor for Filament 3.0 (Supporting Multi Tenant)  
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/visualbuilder/email-templates.svg?style=flat-square)](https://packagist.org/packages/visualbuilder/email-templates)
 [![Total Downloads](https://img.shields.io/packagist/dt/visualbuilder/email-templates.svg?style=flat-square)](https://packagist.org/packages/visualbuilder/email-templates)
